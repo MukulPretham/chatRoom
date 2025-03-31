@@ -16,8 +16,7 @@ type Request = {
     payload?: Message
 }
 
-let RoomID: string = "";
-let Messages: Message[] = [];
+// let RoomID: string = "";
 
 let SOCKETS = new Map<RoomID, WebSocket[]>();
 let MESSAGES = new Map<RoomID, Message[]>();
@@ -28,7 +27,7 @@ wss.on("connection", (socket) => {
     socket.on("message", (data) => {
         const req: Request = JSON.parse(data.toString());
         if (!req.type) {
-            socket.send(JSON.stringify({ type: "error", message: `Invalid request or room no:  ${RoomID}` }));
+            socket.send(JSON.stringify({ type: "error", message: `Invalid request` }));
             return;
         }
         else if (req.type == "create" && req.roomID) {

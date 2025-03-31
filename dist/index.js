@@ -2,8 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const ws_1 = require("ws");
 const wss = new ws_1.WebSocketServer({ port: 8080 });
-let RoomID = "";
-let Messages = [];
+// let RoomID: string = "";
 let SOCKETS = new Map();
 let MESSAGES = new Map();
 wss.on("connection", (socket) => {
@@ -12,7 +11,7 @@ wss.on("connection", (socket) => {
         var _a, _b, _c, _d, _e;
         const req = JSON.parse(data.toString());
         if (!req.type) {
-            socket.send(JSON.stringify({ type: "error", message: `Invalid request or room no:  ${RoomID}` }));
+            socket.send(JSON.stringify({ type: "error", message: `Invalid request` }));
             return;
         }
         else if (req.type == "create" && req.roomID) {
