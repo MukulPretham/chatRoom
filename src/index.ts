@@ -50,6 +50,7 @@ wss.on("connection", (socket) => {
                 socket.send(JSON.stringify({ type: "error", message: "The given roomID does not exist" }));
                 return;
             }
+            
             let updatedSockets: WebSocket[] | undefined = SOCKETS.get(req.roomID);
             updatedSockets?.push(socket);
             if(!updatedSockets){
@@ -139,10 +140,15 @@ wss.on("connection", (socket) => {
             return;
         }
     })
-    // socket.on('close',(code,reason)=>{
-    //     console.log(reason.toString());
-    //     console.log(`Menbers: ${wss.clients.size}`);
-    //     Messages.push({sender: "server",message:reason.toString()});
-    //     socket.send(Messages);
-    // })
+    socket.on('close',()=>{
+        SOCKETS.forEach((entry, roomID)=>{
+            let updatedSockets = entry.filter(e => e !== socket);
+            if(updatedSockets.length === 0){
+                SOCKETS.delete(roomID);
+                MESSAGES.delete(roomID);
+                return;
+            }
+            SOCKETS.set(roomID,updatedSockets);
+        })
+    })
 })
