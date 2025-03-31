@@ -9,7 +9,7 @@ let MESSAGES = new Map();
 wss.on("connection", (socket) => {
     socket.send("welcome to chat app");
     socket.on("message", (data) => {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
         const req = JSON.parse(data.toString());
         if (!req.type) {
             socket.send(JSON.stringify({ type: "error", message: `Invalid request or room no:  ${RoomID}` }));
@@ -70,7 +70,7 @@ wss.on("connection", (socket) => {
                 return;
             }
             let updatedMessages = MESSAGES.get(req.roomID);
-            updatedMessages === null || updatedMessages === void 0 ? void 0 : updatedMessages.push({ sender: req.payload.sender, message: req.payload.sender });
+            updatedMessages === null || updatedMessages === void 0 ? void 0 : updatedMessages.push({ sender: req.payload.sender, message: req.payload.message });
             if (!updatedMessages) {
                 socket.send(JSON.stringify({ type: "error", message: "Something went wrong" }));
                 return;
@@ -88,13 +88,33 @@ wss.on("connection", (socket) => {
             // }
             // return;
         }
-        else if (req.type == "leave" && req.name) {
-            Messages.push({ sender: "server", message: `${req.name} left chat` });
-            for (const client of wss.clients) {
-                if (client.readyState == client.OPEN) {
-                    client.send(JSON.stringify(Messages));
-                }
+        else if (req.type == "leave" && req.name && req.roomID) {
+            if (!SOCKETS.get(req.roomID)) {
+                socket.send(JSON.stringify({ type: "error", message: "The given roomID does not exist" }));
+                return;
             }
+            let updatedMessages = MESSAGES.get(req.roomID);
+            if (!updatedMessages) {
+                socket.send(JSON.stringify({ type: "error", message: "Something went wromg" }));
+                return;
+            }
+            updatedMessages === null || updatedMessages === void 0 ? void 0 : updatedMessages.push({ sender: "server", message: `${req.name} left the chat` });
+            let updatedSockets = (_d = SOCKETS.get(req.roomID)) === null || _d === void 0 ? void 0 : _d.filter(entry => entry !== socket);
+            if (!updatedSockets) {
+                socket.send(JSON.stringify({ type: "error", message: "Something went wrong" }));
+                return;
+            }
+            SOCKETS.set(req.roomID, updatedSockets);
+            MESSAGES.set(req.roomID, updatedMessages);
+            (_e = SOCKETS.get(req.roomID)) === null || _e === void 0 ? void 0 : _e.forEach((socket, index) => {
+                socket.send(JSON.stringify(MESSAGES.get(req.roomID)));
+            });
+            // Messages.push({ sender: "server", message: `${req.name} left chat` });
+            // for (const client of wss.clients) {
+            //     if (client.readyState == client.OPEN) {
+            //         client.send(JSON.stringify(Messages));
+            //     }
+            // }
         }
         else {
             socket.send(JSON.stringify({ type: "error", message: "Invalid request or roomID" }));
