@@ -23,8 +23,8 @@ let MESSAGES = new Map<RoomID, Message[]>();
 
 
 wss.on("connection", (socket) => {
-    socket.send(JSON.stringify({type: "message", message: "Connected to Server"}));
-    socket.on("open",()=>{
+    socket.send(JSON.stringify({ type: "message", message: "Connected to Server" }));
+    socket.on("open", () => {
         console.log(wss.clients.size);
     })
     socket.on("message", (data) => {
@@ -35,8 +35,8 @@ wss.on("connection", (socket) => {
             return;
         }
         else if (req.type == "create" && req.roomID) {
-            if(SOCKETS.has(req.roomID)){
-                socket.send(JSON.stringify({type: "error", message: "Room already exist"}));
+            if (SOCKETS.has(req.roomID)) {
+                socket.send(JSON.stringify({ type: "error", message: "Room already exist" }));
                 return;
             }
             SOCKETS.set(req.roomID, []);
@@ -55,23 +55,23 @@ wss.on("connection", (socket) => {
                 socket.send(JSON.stringify({ type: "error", message: "The given roomID does not exist" }));
                 return;
             }
-            socket.send(JSON.stringify({type: "message", message: `Entered Room: ${req.roomID}`}));
+            socket.send(JSON.stringify({ type: "message", message: `Entered Room: ${req.roomID}` }));
             let updatedSockets: WebSocket[] | undefined = SOCKETS.get(req.roomID);
             updatedSockets?.push(socket);
-            if(!updatedSockets){
-                socket.send(JSON.stringify({type: "error", message: "Something went wrong"}));
+            if (!updatedSockets) {
+                socket.send(JSON.stringify({ type: "error", message: "Something went wrong" }));
                 return;
             }
             SOCKETS.set(req.roomID, updatedSockets);
-            let updatedMessages:Message[] | undefined = MESSAGES.get(req.roomID);
-            updatedMessages?.push({sender: "server",message: `${req.name} entered the chat`});
-            if(!updatedMessages){
-                socket.send(JSON.stringify({type: "error", message: "Something went wrong"}));
+            let updatedMessages: Message[] | undefined = MESSAGES.get(req.roomID);
+            updatedMessages?.push({ sender: "server", message: `${req.name} entered the chat` });
+            if (!updatedMessages) {
+                socket.send(JSON.stringify({ type: "error", message: "Something went wrong" }));
                 return;
             }
-            MESSAGES.set(req.roomID,updatedMessages);
+            MESSAGES.set(req.roomID, updatedMessages);
             let userNo: number | undefined = SOCKETS.get(req.roomID)?.length;
-            SOCKETS.get(req.roomID)?.forEach((socket,index)=>{
+            SOCKETS.get(req.roomID)?.forEach((socket, index) => {
                 socket.send(JSON.stringify(MESSAGES.get(req.roomID)));
             })
             // socket.send(JSON.stringify({ type: "join", message: `joined are User No: ${userNo}` }));
@@ -86,18 +86,18 @@ wss.on("connection", (socket) => {
             // return;
         }
         else if (req.type == "message" && req.roomID && req.payload && req.payload.message && req.payload.sender) {
-            if(!SOCKETS.get(req.roomID)){
+            if (!SOCKETS.get(req.roomID)) {
                 socket.send(JSON.stringify({ type: "error", message: "The given roomID does not exist" }));
                 return;
             }
             let updatedMessages = MESSAGES.get(req.roomID);
-            updatedMessages?.push({sender: req.payload.sender,message: req.payload.message});
-            if(!updatedMessages){
-                socket.send(JSON.stringify({type: "error", message: "Something went wrong"}));
+            updatedMessages?.push({ sender: req.payload.sender, message: req.payload.message });
+            if (!updatedMessages) {
+                socket.send(JSON.stringify({ type: "error", message: "Something went wrong" }));
                 return;
             }
-            MESSAGES.set(req.roomID,updatedMessages);
-            SOCKETS.get(req.roomID)?.forEach((socket,index)=>{
+            MESSAGES.set(req.roomID, updatedMessages);
+            SOCKETS.get(req.roomID)?.forEach((socket, index) => {
                 socket.send(JSON.stringify(MESSAGES.get(req.roomID)));
             })
             // Messages.push(req.payload);
@@ -110,52 +110,49 @@ wss.on("connection", (socket) => {
             // return;
         }
         else if (req.type == "leave" && req.name && req.roomID) {
-            if(!SOCKETS.get(req.roomID)){
+            console.log(req);
+            if (!SOCKETS.get(req.roomID)) {
                 socket.send(JSON.stringify({ type: "error", message: "The given roomID does not exist" }));
                 return;
             }
             let updatedMessages = MESSAGES.get(req.roomID);
-            if(!updatedMessages){
-                socket.send(JSON.stringify({type: "error", message: "Something went wromg"}));
+            if (!updatedMessages) {
+                socket.send(JSON.stringify({ type: "error", message: "Something went wromg" }));
                 return;
             }
-            updatedMessages?.push({sender: "server", message: `${req.name} left the chat`});
-            
-            let updatedSockets = SOCKETS.get(req.roomID)?.filter(entry => entry!==socket);
-            if(!updatedSockets){
-                socket.send(JSON.stringify({type: "error", message: "Something went wrong"}));
+            updatedMessages?.push({ sender: "server", message: `${req.name} left the chat` });
+
+            let updatedSockets = SOCKETS.get(req.roomID)?.filter(entry => entry !== socket);
+            if (!updatedSockets) {
+                socket.send(JSON.stringify({ type: "error", message: "Something went wrong" }));
                 return;
             }
-            SOCKETS.set(req.roomID,updatedSockets)
-            
-            
-            MESSAGES.set(req.roomID,updatedMessages);
-            SOCKETS.get(req.roomID)?.forEach((socket,index)=>{
+            SOCKETS.set(req.roomID, updatedSockets)
+
+
+            MESSAGES.set(req.roomID, updatedMessages);
+            SOCKETS.get(req.roomID)?.forEach((socket, index) => {
                 socket.send(JSON.stringify(MESSAGES.get(req.roomID)));
             })
             console.log(`${req.roomID} has ${updatedSockets.length} members`)
-            // Messages.push({ sender: "server", message: `${req.name} left chat` });
-            // for (const client of wss.clients) {
-            //     if (client.readyState == client.OPEN) {
-            //         client.send(JSON.stringify(Messages));
-            //     }
-            // }
+
+            SOCKETS.forEach((entry, roomID) => {
+                if (entry.length === 0) {
+                    console.log(`closed ${roomID}`);
+                    SOCKETS.delete(roomID);
+                    MESSAGES.delete(roomID);
+                    return;
+                }
+            })
         }
         else {
             socket.send(JSON.stringify({ type: "error", message: "Invalid request or roomID" }));
             return;
         }
     })
-    socket.on('close',()=>{
+    socket.on('close', (code, message) => {
+        //Socket checks
         console.log(`after closing ${wss.clients.size}`);
-        SOCKETS.forEach((entry, roomID)=>{
-            if(entry.length === 0){
-                console.log(`closed ${roomID}`);
-                SOCKETS.delete(roomID);
-                MESSAGES.delete(roomID);
-                
-                return;
-            }
-        })
+        
     })
 })
