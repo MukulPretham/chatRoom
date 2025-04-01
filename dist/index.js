@@ -94,7 +94,7 @@ wss.on("connection", (socket) => {
             // return;
         }
         else if (req.type == "leave" && req.name && req.roomID) {
-            socket.close();
+            console.log(req);
             if (!SOCKETS.get(req.roomID)) {
                 socket.send(JSON.stringify({ type: "error", message: "The given roomID does not exist" }));
                 return;
@@ -116,27 +116,22 @@ wss.on("connection", (socket) => {
                 socket.send(JSON.stringify(MESSAGES.get(req.roomID)));
             });
             console.log(`${req.roomID} has ${updatedSockets.length} members`);
-            // Messages.push({ sender: "server", message: `${req.name} left chat` });
-            // for (const client of wss.clients) {
-            //     if (client.readyState == client.OPEN) {
-            //         client.send(JSON.stringify(Messages));
-            //     }
-            // }
+            SOCKETS.forEach((entry, roomID) => {
+                if (entry.length === 0) {
+                    console.log(`closed ${roomID}`);
+                    SOCKETS.delete(roomID);
+                    MESSAGES.delete(roomID);
+                    return;
+                }
+            });
         }
         else {
             socket.send(JSON.stringify({ type: "error", message: "Invalid request or roomID" }));
             return;
         }
     });
-    socket.on('close', () => {
+    socket.on('close', (code, message) => {
+        //Socket checks
         console.log(`after closing ${wss.clients.size}`);
-        SOCKETS.forEach((entry, roomID) => {
-            if (entry.length === 0) {
-                console.log(`closed ${roomID}`);
-                SOCKETS.delete(roomID);
-                MESSAGES.delete(roomID);
-                return;
-            }
-        });
     });
 });
