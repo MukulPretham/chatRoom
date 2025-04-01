@@ -23,8 +23,12 @@ let MESSAGES = new Map<RoomID, Message[]>();
 
 
 wss.on("connection", (socket) => {
-    socket.send("welcome to chat app");
+    socket.send(JSON.stringify({type: "message", message: "Connected to Server"}));
+    socket.on("open",()=>{
+        console.log(wss.clients.size);
+    })
     socket.on("message", (data) => {
+        console.log(wss.clients.size);
         const req: Request = JSON.parse(data.toString());
         if (!req.type) {
             socket.send(JSON.stringify({ type: "error", message: `Invalid request` }));
@@ -37,6 +41,7 @@ wss.on("connection", (socket) => {
             }
             SOCKETS.set(req.roomID, []);
             MESSAGES.set(req.roomID, []);
+            console.log(`room no : ${req.roomID} created `);
             socket.send(JSON.stringify({ type: "create", message: `Room created by the ID ${req.roomID} ` }));
             return;
             // RoomID = req.roomID;
@@ -50,7 +55,7 @@ wss.on("connection", (socket) => {
                 socket.send(JSON.stringify({ type: "error", message: "The given roomID does not exist" }));
                 return;
             }
-            
+            socket.send(JSON.stringify({type: "message", message: `Entered Room: ${req.roomID}`}));
             let updatedSockets: WebSocket[] | undefined = SOCKETS.get(req.roomID);
             updatedSockets?.push(socket);
             if(!updatedSockets){
@@ -128,6 +133,7 @@ wss.on("connection", (socket) => {
             SOCKETS.get(req.roomID)?.forEach((socket,index)=>{
                 socket.send(JSON.stringify(MESSAGES.get(req.roomID)));
             })
+            console.log(`${req.roomID} has ${updatedSockets.length} members`)
             // Messages.push({ sender: "server", message: `${req.name} left chat` });
             // for (const client of wss.clients) {
             //     if (client.readyState == client.OPEN) {
@@ -141,14 +147,15 @@ wss.on("connection", (socket) => {
         }
     })
     socket.on('close',()=>{
+        console.log(`after closing ${wss.clients.size}`);
         SOCKETS.forEach((entry, roomID)=>{
-            let updatedSockets = entry.filter(e => e !== socket);
-            if(updatedSockets.length === 0){
+            if(entry.length === 0){
+                console.log(`closed ${roomID}`);
                 SOCKETS.delete(roomID);
                 MESSAGES.delete(roomID);
+                
                 return;
             }
-            SOCKETS.set(roomID,updatedSockets);
         })
     })
 })
