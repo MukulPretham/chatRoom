@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
 
-const wss = new WebSocketServer({ port: 443 });
+const wss = new WebSocketServer({ port: 8080 });
 
 type RoomID = string;
 
