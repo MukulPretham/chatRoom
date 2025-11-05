@@ -1,39 +1,44 @@
-# Ghost Chat – WebSocket-Based Chat Room
+# ChatRoom
 
-A real-time chat application built using **WebSockets** where users can create or join rooms using a unique Room ID. Once all users leave a room, it is permanently destroyed. No messages are stored — offering complete privacy through temporary chat sessions.
+## Description
+ChatRoom is a real-time chat application built with WebSockets, enabling users to create and join dynamic chat rooms and exchange messages instantly.
 
-## Features
+## Key Features
+*   **Real-time Messaging:** Instant message delivery between users in the same chat room.
+*   **Room Creation:** Users can create new chat rooms with unique IDs.
+*   **Room Joining:** Users can join existing chat rooms using their respective IDs.
+*   **User Notifications:** Get notified when users enter or leave a chat room.
+*   **Multiple Chat Rooms:** Supports multiple isolated chat rooms concurrently.
 
-- Real-time bi-directional communication with WebSockets
-- Create or join chat rooms using custom Room IDs
-- Rooms are destroyed when empty — no persistence
-- Lightweight and privacy-focused
-- Styled using Tailwind CSS for a clean UI
+## Getting Started
 
-## WebSocket Implementation
+### Installation
 
-The core of this project uses the native `ws` WebSocket library in Node.js:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/MukulPretham/chatRoom.git
+    ```
+2.  **Navigate to the project directory:**
+    ```bash
+    cd chatRoom
+    ```
+3.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-- A WebSocket server runs on top of the Express server.
-- Each client connects to the WebSocket server and joins a room.
-- Messages are broadcast only to users in the same room.
-- When all users leave a room, it is deleted from the server's memory.
-- No messages are saved on the server — once disconnected, all chat history is gone.
+### Running the Server
 
-This makes it ideal for temporary, anonymous conversations without any data retention.
+1.  **Compile the TypeScript code:**
+    ```bash
+    npx tsc
+    ```
+2.  **Start the server:**
+    ```bash
+    node dist/index.js
+    ```
+    The server will start and listen for WebSocket connections on port `8080`.
 
-## Tech Stack
+## Code Overview
 
-- Node.js
-- Express.js
-- ws (WebSocket)
-- Tailwind CSS
-- HTML/CSS/JS
-
-## Setup
-
-```bash
-git clone https://github.com/MukulPretham/chatRoom.git
-cd chatRoom
-npm install
-node server.js
+*   `src/index.ts`: This is the core server-side application file written in TypeScript. It utilizes the `ws` library to manage WebSocket connections. The file defines the logic for handling various client requests, including creating new chat rooms, allowing users to join rooms, broadcasting messages within a room, and managing user departures. It maintains two primary data structures: `SOCKETS` (a `Map` to store active WebSockets per `RoomID`) and `MESSAGES` (a `Map` to store chat history for each `RoomID`). The server processes requests of types `create`, `join`, `message`, and `leave` to facilitate real-time chat interactions.
